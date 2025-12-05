@@ -1,185 +1,190 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Moldura da Festa</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Moldura da Festa</title>
 
-    <style>
-        body {
-            margin: 0;
-            overflow: hidden;
-            background: #000;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-        }
+<style>
+    body {
+        margin: 0;
+        background: #000;
+        overflow: hidden;
+    }
 
-        #camera, #preview {
-            position: absolute;
-            width: 100vw;
-            height: 100vh;
-            object-fit: cover;
-            top: 0;
-            left: 0;
-        }
+    #camera, #preview {
+        position: absolute;
+        width: 100vw;
+        height: 100vh;
+        object-fit: cover;
+        top: 0;
+        left: 0;
+    }
 
-        #preview {
-            display: none;
-            z-index: 3;
-        }
+    #preview {
+        display: none;
+        z-index: 5;
+    }
 
-        #frame {
-            position: absolute;
-            width: 100vw;
-            height: 100vh;
-            z-index: 2;
-            pointer-events: none;
-        }
+    #frame {
+        position: absolute;
+        width: 100vw;
+        height: 100vh;
+        top: 0;
+        left: 0;
+        pointer-events: none;
+        z-index: 3;
+    }
 
-        .btn {
-            position: absolute;
-            z-index: 4;
-            font-size: 17px;
-            padding: 12px 18px;
-            border: none;
-            border-radius: 10px;
-            background: #ff4081;
-            color: white;
-            cursor: pointer;
-        }
+    /* Botões padrões (capturar + trocar câmera) */
+    .btn {
+        position: absolute;
+        z-index: 10;
+        font-size: 18px;
+        padding: 12px 20px;
+        border: none;
+        border-radius: 10px;
+        background: rgba(0,0,0,0.6);
+        color: white;
+        backdrop-filter: blur(4px);
+        cursor: pointer;
+    }
 
-        #captureBtn {
-            bottom: 20px;
-        }
+    #captureBtn {
+        bottom: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+    }
 
-        #switchBtn {
-            bottom: 80px;
-        }
+    #switchBtn {
+        bottom: 90px;
+        right: 20px;
+    }
 
-        /* Botões da prévia */
-        #saveBtn, #retakeBtn {
-            bottom: 20px;
-            display: none;
-        }
+    /* Botões da prévia */
+    #saveBtn, #retakeBtn {
+        display: none;
+        bottom: 20px;
+    }
 
-        #saveBtn {
-            left: 20px;
-            background: #4caf50;
-        }
+    #saveBtn {
+        left: 20px;
+        background: #2ecc71;
+    }
 
-        #retakeBtn {
-            right: 20px;
-            background: #e91e63;
-        }
-    </style>
+    #retakeBtn {
+        right: 20px;
+        background: #e74c3c;
+    }
+</style>
+
 </head>
-
 <body>
 
     <video id="camera" autoplay playsinline></video>
-    <img id="frame" src="moldura.png">
 
+    <!-- Sua moldura aqui -->
+    <img id="frame" src="moldura.png" alt="Moldura">
+
+    <!-- Prévia da foto -->
     <img id="preview">
 
-    <button class="btn" id="captureBtn">📸 Capturar</button>
-    <button class="btn" id="switchBtn">🔄 Virar Câmera</button>
+    <!-- Botões -->
+    <button class="btn" id="captureBtn">Capturar</button>
+    <button class="btn" id="switchBtn">Trocar Câmera</button>
 
-    <button class="btn" id="saveBtn">💾 Salvar na Galeria</button>
-    <button class="btn" id="retakeBtn">🔄 Tirar Outra Foto</button>
+    <button class="btn" id="saveBtn">Salvar</button>
+    <button class="btn" id="retakeBtn">Tirar Outra</button>
 
     <canvas id="canvas" style="display:none;"></canvas>
 
-    <script>
-        const camera = document.getElementById('camera');
-        const frame = document.getElementById('frame');
-        const canvas = document.getElementById('canvas');
+<script>
+    const camera = document.getElementById("camera");
+    const frame = document.getElementById("frame");
+    const preview = document.getElementById("preview");
+    const canvas = document.getElementById("canvas");
 
-        const preview = document.getElementById('preview');
-        const captureBtn = document.getElementById('captureBtn');
-        const switchBtn = document.getElementById('switchBtn');
+    const captureBtn = document.getElementById("captureBtn");
+    const switchBtn = document.getElementById("switchBtn");
 
-        const saveBtn = document.getElementById('saveBtn');
-        const retakeBtn = document.getElementById('retakeBtn');
+    const saveBtn = document.getElementById("saveBtn");
+    const retakeBtn = document.getElementById("retakeBtn");
 
-        let usingFrontCamera = false;
-        let currentStream;
+    let usingFront = false;
+    let stream;
 
-        async function startCamera() {
-            if (currentStream) {
-                currentStream.getTracks().forEach(t => t.stop());
+    async function startCamera() {
+        if (stream) stream.getTracks().forEach(t => t.stop());
+
+        stream = await navigator.mediaDevices.getUserMedia({
+            video: {
+                facingMode: usingFront ? "user" : "environment",
+                width: { ideal: 1920 },
+                height: { ideal: 1080 }
             }
+        });
 
-            currentStream = await navigator.mediaDevices.getUserMedia({
-                video: {
-                    facingMode: usingFrontCamera ? "user" : { exact: "environment" },
-                    width: { ideal: 1920 },
-                    height: { ideal: 1080 }
-                }
-            });
+        camera.srcObject = stream;
 
-            camera.srcObject = currentStream;
+        camera.style.transform =
+            usingFront ? "scaleX(-1)" : "scaleX(1)";
+    }
 
-            camera.style.transform = usingFrontCamera ? "scaleX(-1)" : "scaleX(1)";
-        }
+    startCamera();
 
+    switchBtn.onclick = () => {
+        usingFront = !usingFront;
         startCamera();
+    };
 
-        switchBtn.onclick = () => {
-            usingFrontCamera = !usingFrontCamera;
-            startCamera();
-        };
+    let finalImage = "";
 
-        let finalImageURL = "";
+    captureBtn.onclick = async () => {
+        const ctx = canvas.getContext("2d");
+        canvas.width = 1080;
+        canvas.height = 1920;
 
-        captureBtn.onclick = async () => {
-            const ctx = canvas.getContext('2d');
+        ctx.drawImage(camera, 0, 0, canvas.width, canvas.height);
 
-            canvas.width = 1080;
-            canvas.height = 1920;
+        const moldura = new Image();
+        moldura.src = "moldura.png";
+        await moldura.decode();
+        ctx.drawImage(moldura, 0, 0, canvas.width, canvas.height);
 
-            ctx.drawImage(camera, 0, 0, canvas.width, canvas.height);
+        finalImage = canvas.toDataURL("image/png", 1.0);
 
-            const moldura = new Image();
-            moldura.src = "moldura.png";
-            await moldura.decode();
-            ctx.drawImage(moldura, 0, 0, canvas.width, canvas.height);
+        preview.src = finalImage;
 
-            finalImageURL = canvas.toDataURL("image/png", 1.0);
+        preview.style.display = "block";
+        camera.style.display = "none";
+        frame.style.display = "none";
 
-            preview.src = finalImageURL;
+        captureBtn.style.display = "none";
+        switchBtn.style.display = "none";
 
-            preview.style.display = "block";
-            camera.style.display = "none";
-            frame.style.display = "none";
+        saveBtn.style.display = "block";
+        retakeBtn.style.display = "block";
+    };
 
-            captureBtn.style.display = "none";
-            switchBtn.style.display = "none";
+    saveBtn.onclick = () => {
+        const a = document.createElement("a");
+        a.href = finalImage;
+        a.download = "foto.png";
+        a.click();
+    };
 
-            saveBtn.style.display = "block";
-            retakeBtn.style.display = "block";
-        };
+    retakeBtn.onclick = () => {
+        preview.style.display = "none";
+        camera.style.display = "block";
+        frame.style.display = "block";
 
-        saveBtn.onclick = () => {
-            const link = document.createElement('a');
-            link.download = "foto-moldura.png";
-            link.href = finalImageURL;
-            link.click();
-        };
+        saveBtn.style.display = "none";
+        retakeBtn.style.display = "none";
 
-        retakeBtn.onclick = () => {
-            preview.style.display = "none";
-            camera.style.display = "block";
-            frame.style.display = "block";
-
-            saveBtn.style.display = "none";
-            retakeBtn.style.display = "none";
-
-            captureBtn.style.display = "block";
-            switchBtn.style.display = "block";
-        };
-    </script>
+        captureBtn.style.display = "block";
+        switchBtn.style.display = "block";
+    };
+</script>
 
 </body>
 </html>
