@@ -1,214 +1,185 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Câmera com Moldura</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Moldura da Festa</title>
 
-<style>
-    body {
-        margin: 0;
-        overflow: hidden;
-        background: #000;
-        font-family: Arial, sans-serif;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        height: 100vh;
-    }
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background: #000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
 
-    #camera, #preview {
-        position: absolute;
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-        top: 0;
-        left: 0;
-    }
+        #camera, #preview {
+            position: absolute;
+            width: 100vw;
+            height: 100vh;
+            object-fit: cover;
+            top: 0;
+            left: 0;
+        }
 
-     #preview {
-        display: none;
-        z-index: 3;
-    }
+        #preview {
+            display: none;
+            z-index: 3;
+        }
 
-    #frame {
-        position: absolute;
-        width: 100vw;
-        height: 100vh;
-        z-index: 2;
-        pointer-events: none;
-    }
+        #frame {
+            position: absolute;
+            width: 100vw;
+            height: 100vh;
+            z-index: 2;
+            pointer-events: none;
+        }
 
-    /* ---- BOTÕES ---- */
-    .btn {
-        position: absolute;
-        bottom: 4vh;
-        width: 100%;
-        display: flex;
-        justify-content: center;
-        gap: 6vw;
-        z-index: 10;
-    }
+        .btn {
+            position: absolute;
+            z-index: 4;
+            font-size: 17px;
+            padding: 12px 18px;
+            border: none;
+            border-radius: 10px;
+            background: #ff4081;
+            color: white;
+            cursor: pointer;
+        }
 
-    .btn {
-        padding: 2.8vh 3.5vh;
-        border-radius: 50%;
-        background: rgba(255, 255, 255, 0.85);
-        border: none;
-        backdrop-filter: blur(6px);
-        font-size: 0;
-        cursor: pointer;
-        transition: 0.3s;
-    }
+        #captureBtn {
+            bottom: 20px;
+        }
 
-    /* Ícones minimalistas */
-    .icon {
-        width: 24px;
-        height: 24px;
-        opacity: 0.8;
-    }
+        #switchBtn {
+            bottom: 80px;
+        }
 
-    /* ---- ANIMAÇÃO SUAVE DO BOTÃO DE CAPTURAR ---- */
-    #capture-btn {
-        animation: pulse 1.6s infinite ease-in-out;
-    }
+        /* Botões da prévia */
+        #saveBtn, #retakeBtn {
+            bottom: 20px;
+            display: none;
+        }
 
-    @keyframes pulse {
-        0% { transform: scale(1); }
-        50% { transform: scale(1.08); }
-        100% { transform: scale(1); }
-    }
+        #saveBtn {
+            left: 20px;
+            background: #4caf50;
+        }
 
-    /* ---- ÁREA DA PREVIEW ---- */
-    #preview-screen {
-        position: absolute;
-        top: 0; left: 0;
-        width: 100%;
-        height: 100%;
-        background: #000;
-        display: none;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-        z-index: 20;
-    }
-
-    #preview-img {
-        max-width: 100%;
-        max-height: 80%;
-    }
-
-    #preview-buttons {
-        margin-top: 3vh;
-        display: none;
-        gap: 5vw;
-    }
-
-    .preview-btn {
-        padding: 1.5vh 3vh;
-        background: #ffffffee;
-        border-radius: 12px;
-        border: none;
-        font-size: 2.4vh;
-        cursor: pointer;
-        backdrop-filter: blur(4px);
-    }
-</style>
+        #retakeBtn {
+            right: 20px;
+            background: #e91e63;
+        }
+    </style>
 </head>
 
 <body>
 
-<div id="camera-container">
-    <video id="video" autoplay playsinline></video>
+    <video id="camera" autoplay playsinline></video>
     <img id="frame" src="moldura.png">
 
-    <!-- Botões da câmera -->
-    <div class="btn" id="camera-buttons">
-        <button class="btn" id="switch-btn">
-            <img src="https://cdn-icons-png.flaticon.com/512/545/545682.png" class="icon">
-        </button>
+    <img id="preview">
 
-        <button class="btn" id="capture-btn">
-            <img src="https://cdn-icons-png.flaticon.com/512/32/32355.png" class="icon">
-        </button>
-    </div>
+    <button class="btn" id="captureBtn">📸 Capturar</button>
+    <button class="btn" id="switchBtn">🔄 Virar Câmera</button>
 
-    <!-- Tela de Preview -->
-    <div id="preview-screen">
-        <img id="preview-img">
+    <button class="btn" id="saveBtn">💾 Salvar na Galeria</button>
+    <button class="btn" id="retakeBtn">🔄 Tirar Outra Foto</button>
 
-        <div id="preview-buttons">
-            <button class="preview-btn" id="save-btn">Salvar</button>
-            <button class="preview-btn" id="retake-btn">Tirar outra</button>
-        </div>
-    </div>
+    <canvas id="canvas" style="display:none;"></canvas>
 
-</div>
+    <script>
+        const camera = document.getElementById('camera');
+        const frame = document.getElementById('frame');
+        const canvas = document.getElementById('canvas');
 
-<canvas id="canvas" width="1080" height="1920" style="display:none"></canvas>
+        const preview = document.getElementById('preview');
+        const captureBtn = document.getElementById('captureBtn');
+        const switchBtn = document.getElementById('switchBtn');
 
-<script>
-let video = document.getElementById("video");
-let canvas = document.getElementById("canvas");
-let frame = document.getElementById("frame");
-let facing = "environment"; // Abre direto na câmera traseira
+        const saveBtn = document.getElementById('saveBtn');
+        const retakeBtn = document.getElementById('retakeBtn');
 
-async function startCamera() {
-    const stream = await navigator.mediaDevices.getUserMedia({
-        video: {
-            facingMode: facing,
-            width: { ideal: 1080 },
-            height: { ideal: 1920 }
+        let usingFrontCamera = false;
+        let currentStream;
+
+        async function startCamera() {
+            if (currentStream) {
+                currentStream.getTracks().forEach(t => t.stop());
+            }
+
+            currentStream = await navigator.mediaDevices.getUserMedia({
+                video: {
+                    facingMode: usingFrontCamera ? "user" : { exact: "environment" },
+                    width: { ideal: 1920 },
+                    height: { ideal: 1080 }
+                }
+            });
+
+            camera.srcObject = currentStream;
+
+            camera.style.transform = usingFrontCamera ? "scaleX(-1)" : "scaleX(1)";
         }
-    });
 
-    video.srcObject = stream;
-}
+        startCamera();
 
-startCamera();
+        switchBtn.onclick = () => {
+            usingFrontCamera = !usingFrontCamera;
+            startCamera();
+        };
 
-// Trocar câmera
-document.getElementById("switch-btn").addEventListener("click", () => {
-    facing = facing === "environment" ? "user" : "environment";
-    startCamera();
-});
+        let finalImageURL = "";
 
-// CAPTURAR
-document.getElementById("capture-btn").addEventListener("click", () => {
-    let ctx = canvas.getContext("2d");
+        captureBtn.onclick = async () => {
+            const ctx = canvas.getContext('2d');
 
-    // vídeo espelhado
-    ctx.save();
-    ctx.scale(-1, 1);
-    ctx.drawImage(video, -canvas.width, 0, canvas.width, canvas.height);
-    ctx.restore();
+            canvas.width = 1080;
+            canvas.height = 1920;
 
-    // aplica moldura
-    ctx.drawImage(frame, 0, 0, canvas.width, canvas.height);
+            ctx.drawImage(camera, 0, 0, canvas.width, canvas.height);
 
-    let imgData = canvas.toDataURL("image/png", 1.0);
+            const moldura = new Image();
+            moldura.src = "moldura.png";
+            await moldura.decode();
+            ctx.drawImage(moldura, 0, 0, canvas.width, canvas.height);
 
-    document.getElementById("preview-img").src = imgData;
+            finalImageURL = canvas.toDataURL("image/png", 1.0);
 
-    document.getElementById("camera-buttons").style.display = "none";
-    document.getElementById("preview-screen").style.display = "flex";
-});
+            preview.src = finalImageURL;
 
-// SALVAR
-document.getElementById("save-btn").addEventListener("click", () => {
-    let link = document.createElement("a");
-    link.download = "foto-moldura.png";
-    link.href = canvas.toDataURL();
-    link.click();
-});
+            preview.style.display = "block";
+            camera.style.display = "none";
+            frame.style.display = "none";
 
-// TIRAR OUTRA
-document.getElementById("retake-btn").addEventListener("click", () => {
-    document.getElementById("preview-screen").style.display = "none";
-    document.getElementById("camera-buttons").style.display = "flex";
-});
+            captureBtn.style.display = "none";
+            switchBtn.style.display = "none";
 
-</script>
+            saveBtn.style.display = "block";
+            retakeBtn.style.display = "block";
+        };
+
+        saveBtn.onclick = () => {
+            const link = document.createElement('a');
+            link.download = "foto-moldura.png";
+            link.href = finalImageURL;
+            link.click();
+        };
+
+        retakeBtn.onclick = () => {
+            preview.style.display = "none";
+            camera.style.display = "block";
+            frame.style.display = "block";
+
+            saveBtn.style.display = "none";
+            retakeBtn.style.display = "none";
+
+            captureBtn.style.display = "block";
+            switchBtn.style.display = "block";
+        };
+    </script>
 
 </body>
 </html>
