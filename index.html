@@ -17,31 +17,30 @@
         height: 100vh;
     }
 
-    #camera-container {
-        position: relative;
-        width: 100%;
-        height: 100%;
-        overflow: hidden;
-    }
-
-    video {
+    #camera, #preview {
+        position: absolute;
         width: 100%;
         height: 100%;
         object-fit: cover;
-        transform: scaleX(-1); /* espelho */
+        top: 0;
+        left: 0;
+    }
+
+     #preview {
+        display: none;
+        z-index: 3;
     }
 
     #frame {
         position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
+        width: 100vw;
+        height: 100vh;
+        z-index: 2;
         pointer-events: none;
     }
 
     /* ---- BOTÕES ---- */
-    .btn-area {
+    .btn {
         position: absolute;
         bottom: 4vh;
         width: 100%;
@@ -101,7 +100,7 @@
 
     #preview-buttons {
         margin-top: 3vh;
-        display: flex;
+        display: none;
         gap: 5vw;
     }
 
