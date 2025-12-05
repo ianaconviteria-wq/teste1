@@ -38,41 +38,46 @@
             pointer-events: none;
         }
 
-        .btn {
-            position: absolute;
-            z-index: 4;
-            font-size: 17px;
-            padding: 12px 18px;
-            border: none;
-            border-radius: 10px;
-            background: #ff4081;
-            color: white;
-            cursor: pointer;
-        }
+     /* ---- BOTÕES ---- */
+    .btn-area {
+        position: absolute;
+        bottom: 4vh;
+        width: 100%;
+        display: flex;
+        justify-content: center;
+        gap: 6vw;
+        z-index: 10;
+    }
 
-        #captureBtn {
-            bottom: 20px;
-        }
+    .btn {
+        padding: 2.8vh 3.5vh;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.85);
+        border: none;
+        backdrop-filter: blur(6px);
+        font-size: 0;
+        cursor: pointer;
+        transition: 0.3s;
+    }
 
-        #switchBtn {
-            bottom: 80px;
-        }
+    /* Ícones minimalistas */
+    .icon {
+        width: 24px;
+        height: 24px;
+        opacity: 0.8;
+    }
 
-        /* Botões da prévia */
-        #saveBtn, #retakeBtn {
-            bottom: 20px;
-            display: none;
-        }
+    /* ---- ANIMAÇÃO SUAVE DO BOTÃO DE CAPTURAR ---- */
+    #capture-btn {
+        animation: pulse 1.6s infinite ease-in-out;
+    }
 
-        #saveBtn {
-            left: 20px;
-            background: #4caf50;
-        }
+    @keyframes pulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.08); }
+        100% { transform: scale(1); }
+    }
 
-        #retakeBtn {
-            right: 20px;
-            background: #e91e63;
-        }
     </style>
 </head>
 
